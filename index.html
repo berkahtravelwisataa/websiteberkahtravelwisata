@@ -1,0 +1,1954 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Berkah Travel Wisata - Booking Tiket Travel & Shuttle</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0f9ff',
+              100: '#e0f2fe',
+              200: '#bae6fd',
+              400: '#38bdf8',
+              500: '#0284c7',
+              600: '#0194f3',
+              700: '#0369a1',
+            },
+            travelokaOrange: '#ff5e1f'
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Font: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- React 18 & Babel Standalone -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #f7f9fa;
+      color: #1a202c;
+    }
+    /* Keyframe animasi tiket melayang (Tahap 5) */
+    @keyframes floatTicket {
+      0%, 100% { transform: translateY(0px) rotate(-6deg); }
+      50% { transform: translateY(-16px) rotate(3deg); }
+    }
+    .animate-float-ticket {
+      animation: floatTicket 2.5s ease-in-out infinite;
+    }
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 0.6; transform: scale(1); }
+      50% { opacity: 0.9; transform: scale(1.08); }
+    }
+    .animate-glow {
+      animation: pulseGlow 2.5s ease-in-out infinite;
+    }
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      height: 6px;
+      width: 6px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #bae6fd;
+      border-radius: 9999px;
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased min-h-screen flex flex-col">
+
+  <div id="root"></div>
+
+  <!-- React Application Logic -->
+  <script type="text/babel">
+    const { useState, useEffect, useRef, useMemo } = React;
+
+    // Nomor WhatsApp Resmi Berkah Travel Wisata
+    const WA_NUMBER = "6281219232214";
+
+    // MASTER DATA TARIF LENGKAP SESUAI TABEL RESMI BERKAH TRAVEL WISATA
+    const ROUTE_FARES = [
+      // DARI PALEMBANG
+      { origin: "PALEMBANG", destination: "INDRALAYA", fare: 60000, duration: "1j 15m" },
+      { origin: "PALEMBANG", destination: "PRABUMULIH", fare: 130000, duration: "2j 30m" },
+      { origin: "PALEMBANG", destination: "MUARA ENIM", fare: 150000, duration: "3j 45m" },
+      { origin: "PALEMBANG", destination: "TANJUNG ENIM", fare: 180000, duration: "4j 15m" },
+      { origin: "PALEMBANG", destination: "LAHAT", fare: 200000, duration: "5j 00m" },
+      { origin: "PALEMBANG", destination: "PAGARALAM", fare: 230000, duration: "6j 30m" },
+      { origin: "PALEMBANG", destination: "LUBUKLINGGAU", fare: 250000, duration: "7j 00m" },
+      { origin: "PALEMBANG", destination: "BENGKULU", fare: 380000, duration: "10j 00m" },
+      { origin: "PALEMBANG", destination: "JAMBI", fare: 230000, duration: "6j 00m" },
+      { origin: "PALEMBANG", destination: "PEKANBARU", fare: 480000, duration: "14j 00m" },
+      { origin: "PALEMBANG", destination: "PADANG", fare: 580000, duration: "16j 00m" },
+      { origin: "PALEMBANG", destination: "BATAM", fare: 930000, duration: "Transit" },
+      { origin: "PALEMBANG", destination: "MEDAN", fare: 930000, duration: "24j 00m" },
+      { origin: "PALEMBANG", destination: "ACEH", fare: 1250000, duration: "30j 00m" },
+      { origin: "PALEMBANG", destination: "BANDAR LAMPUNG", fare: 280000, duration: "4j 30m" },
+      { origin: "PALEMBANG", destination: "TANGERANG", fare: 600000, duration: "11j 30m" },
+      { origin: "PALEMBANG", destination: "BANDUNG", fare: 600000, duration: "13j 40m" },
+      { origin: "PALEMBANG", destination: "DEPOK", fare: 600000, duration: "12j 00m" },
+      { origin: "PALEMBANG", destination: "BOGOR", fare: 600000, duration: "12j 30m" },
+      { origin: "PALEMBANG", destination: "INDRAMAYU", fare: 600000, duration: "14j 00m" },
+      { origin: "PALEMBANG", destination: "CIREBON", fare: 650000, duration: "14j 30m" },
+      { origin: "PALEMBANG", destination: "SEMARANG", fare: 800000, duration: "16j 00m" },
+      { origin: "PALEMBANG", destination: "YOGYAKARTA", fare: 950000, duration: "18j 00m" },
+      { origin: "PALEMBANG", destination: "SURABAYA", fare: 1150000, duration: "20j 00m" },
+      { origin: "PALEMBANG", destination: "BATURAJA", fare: 200000, duration: "4j 30m" },
+      { origin: "PALEMBANG", destination: "MUARA DUA", fare: 300000, duration: "5j 30m" },
+      { origin: "PALEMBANG", destination: "DENPASAR BALI", fare: 1500000, duration: "28j 00m" },
+
+      // DARI INDRALAYA
+      { origin: "INDRALAYA", destination: "BATURAJA", fare: 170000, duration: "3j 30m" },
+      { origin: "INDRALAYA", destination: "MUARA DUA", fare: 230000, duration: "4j 30m" },
+      { origin: "INDRALAYA", destination: "PALEMBANG", fare: 260000, duration: "1j 15m" },
+      { origin: "INDRALAYA", destination: "LUBUKLINGGAU", fare: 230000, duration: "6j 00m" },
+
+      // DARI WILAYAH SUMSEL MENUJU PALEMBANG
+      { origin: "PRABUMULIH", destination: "PALEMBANG", fare: 130000, duration: "2j 30m" },
+      { origin: "MUARA ENIM", destination: "PALEMBANG", fare: 150000, duration: "3j 45m" },
+      { origin: "TANJUNG ENIM", destination: "PALEMBANG", fare: 180000, duration: "4j 15m" },
+      { origin: "LAHAT", destination: "PALEMBANG", fare: 200000, duration: "5j 00m" },
+      { origin: "PAGARALAM", destination: "PALEMBANG", fare: 230000, duration: "6j 30m" },
+      { origin: "LUBUKLINGGAU", destination: "PALEMBANG", fare: 250000, duration: "7j 00m" },
+      { origin: "BENGKULU", destination: "PALEMBANG", fare: 380000, duration: "10j 00m" },
+      { origin: "JAMBI", destination: "PALEMBANG", fare: 230000, duration: "6j 00m" },
+      { origin: "PEKANBARU", destination: "PALEMBANG", fare: 480000, duration: "14j 00m" },
+      { origin: "PADANG", destination: "PALEMBANG", fare: 580000, duration: "16j 00m" },
+      { origin: "BATAM", destination: "PALEMBANG", fare: 930000, duration: "Transit" },
+      { origin: "MEDAN", destination: "PALEMBANG", fare: 930000, duration: "24j 00m" },
+      { origin: "ACEH", destination: "PALEMBANG", fare: 1250000, duration: "30j 00m" },
+      { origin: "BANDAR LAMPUNG", destination: "PALEMBANG", fare: 330000, duration: "4j 30m" },
+      { origin: "TANGERANG", destination: "PALEMBANG", fare: 550000, duration: "11j 30m" },
+      { origin: "BANDUNG", destination: "PALEMBANG", fare: 550000, duration: "13j 30m" },
+      { origin: "DEPOK", destination: "PALEMBANG", fare: 550000, duration: "12j 00m" },
+      { origin: "BOGOR", destination: "PALEMBANG", fare: 600000, duration: "12j 30m" },
+      { origin: "INDRAMAYU", destination: "PALEMBANG", fare: 600000, duration: "14j 00m" },
+      { origin: "CIREBON", destination: "PALEMBANG", fare: 650000, duration: "14j 30m" },
+      { origin: "SEMARANG", destination: "PALEMBANG", fare: 800000, duration: "16j 00m" },
+      { origin: "YOGYAKARTA", destination: "PALEMBANG", fare: 950000, duration: "18j 00m" },
+      { origin: "SURABAYA", destination: "PALEMBANG", fare: 1150000, duration: "20j 00m" },
+      { origin: "BATURAJA", destination: "PALEMBANG", fare: 200000, duration: "4j 30m" },
+      { origin: "MUARA DUA", destination: "PALEMBANG", fare: 300000, duration: "5j 30m" },
+      { origin: "MARTAPURA", destination: "PALEMBANG", fare: 330000, duration: "5j 00m" },
+
+      // DARI BANDAR LAMPUNG
+      { origin: "BANDAR LAMPUNG", destination: "LUBUKLINGGAU", fare: 380000, duration: "8j 00m" },
+      { origin: "BANDAR LAMPUNG", destination: "JAMBI", fare: 510000, duration: "9j 30m" },
+      { origin: "BANDAR LAMPUNG", destination: "PEKANBARU", fare: 750000, duration: "16j 00m" },
+      { origin: "BANDAR LAMPUNG", destination: "PADANG", fare: 680000, duration: "18j 00m" },
+      { origin: "BANDAR LAMPUNG", destination: "BATAM", fare: 1220000, duration: "Transit" },
+      { origin: "BANDAR LAMPUNG", destination: "MEDAN", fare: 1250000, duration: "26j 00m" },
+      { origin: "BANDAR LAMPUNG", destination: "ACEH", fare: 1450000, duration: "32j 00m" },
+      { origin: "BANDAR LAMPUNG", destination: "BATURAJA", fare: 300000, duration: "4j 00m" },
+      { origin: "BANDAR LAMPUNG", destination: "MUARA DUA", fare: 300000, duration: "5j 00m" },
+      { origin: "BANDAR LAMPUNG", destination: "TANGERANG", fare: 450000, duration: "6j 00m" },
+      { origin: "BANDAR LAMPUNG", destination: "DEPOK", fare: 450000, duration: "6j 30m" },
+      { origin: "BANDAR LAMPUNG", destination: "BOGOR", fare: 450000, duration: "6j 30m" },
+      { origin: "BANDAR LAMPUNG", destination: "BANDUNG", fare: 550000, duration: "8j 00m" },
+      { origin: "BANDAR LAMPUNG", destination: "INDRAMAYU", fare: 600000, duration: "9j 00m" },
+      { origin: "BANDAR LAMPUNG", destination: "CIREBON", fare: 600000, duration: "9j 30m" },
+      { origin: "BANDAR LAMPUNG", destination: "SEMARANG", fare: 700000, duration: "11j 00m" },
+      { origin: "BANDAR LAMPUNG", destination: "YOGYAKARTA", fare: 850000, duration: "13j 00m" },
+      { origin: "BANDAR LAMPUNG", destination: "SURABAYA", fare: 1100000, duration: "15j 00m" },
+      { origin: "BANDAR LAMPUNG", destination: "DENPASAR BALI", fare: 1300000, duration: "24j 00m" },
+
+      // DARI TANGERANG
+      { origin: "TANGERANG", destination: "BANDAR LAMPUNG", fare: 450000, duration: "6j 00m" },
+      { origin: "TANGERANG", destination: "JAMBI", fare: 800000, duration: "17j 00m" },
+      { origin: "TANGERANG", destination: "DEPOK", fare: 300000, duration: "2j 00m" },
+      { origin: "TANGERANG", destination: "BOGOR", fare: 300000, duration: "2j 30m" },
+      { origin: "TANGERANG", destination: "BANDUNG", fare: 300000, duration: "3j 30m" },
+      { origin: "TANGERANG", destination: "INDRAMAYU", fare: 300000, duration: "4j 00m" },
+      { origin: "TANGERANG", destination: "CIREBON", fare: 300000, duration: "4j 30m" },
+      { origin: "TANGERANG", destination: "SEMARANG", fare: 400000, duration: "6j 00m" },
+      { origin: "TANGERANG", destination: "YOGYAKARTA", fare: 500000, duration: "8j 00m" },
+      { origin: "TANGERANG", destination: "SURABAYA", fare: 600000, duration: "10j 00m" },
+      { origin: "TANGERANG", destination: "DENPASAR BALI", fare: 700000, duration: "18j 00m" },
+      { origin: "TANGERANG", destination: "SERANG", fare: 300000, duration: "1j 30m" },
+      { origin: "TANGERANG", destination: "CILEGON", fare: 350000, duration: "2j 00m" },
+      { origin: "TANGERANG", destination: "KARAWANG", fare: 300000, duration: "2j 00m" },
+      { origin: "TANGERANG", destination: "CIKAMPEK", fare: 300000, duration: "2j 15m" },
+
+      // DARI BOGOR
+      { origin: "BOGOR", destination: "TANGERANG", fare: 300000, duration: "2j 30m" },
+      { origin: "BOGOR", destination: "BANDUNG", fare: 300000, duration: "3j 00m" },
+      { origin: "BOGOR", destination: "INDRAMAYU", fare: 300000, duration: "4j 00m" },
+      { origin: "BOGOR", destination: "CIREBON", fare: 300000, duration: "4j 30m" },
+      { origin: "BOGOR", destination: "SEMARANG", fare: 400000, duration: "6j 30m" },
+      { origin: "BOGOR", destination: "YOGYAKARTA", fare: 550000, duration: "8j 30m" },
+      { origin: "BOGOR", destination: "SURABAYA", fare: 650000, duration: "10j 30m" },
+      { origin: "BOGOR", destination: "DENPASAR BALI", fare: 750000, duration: "18j 30m" },
+      { origin: "BOGOR", destination: "SERANG", fare: 350000, duration: "2j 30m" },
+      { origin: "BOGOR", destination: "CILEGON", fare: 350000, duration: "2j 45m" },
+      { origin: "BOGOR", destination: "KARAWANG", fare: 300000, duration: "2j 00m" },
+      { origin: "BOGOR", destination: "BANDAR LAMPUNG", fare: 450000, duration: "6j 30m" },
+      { origin: "BOGOR", destination: "JAMBI", fare: 800000, duration: "18j 00m" },
+
+      // DARI BANDUNG
+      { origin: "BANDUNG", destination: "BANDAR LAMPUNG", fare: 550000, duration: "8j 00m" },
+      { origin: "BANDUNG", destination: "JAMBI", fare: 850000, duration: "19j 00m" },
+      { origin: "BANDUNG", destination: "INDRAMAYU", fare: 300000, duration: "3j 00m" },
+      { origin: "BANDUNG", destination: "CIREBON", fare: 300000, duration: "3j 00m" },
+      { origin: "BANDUNG", destination: "SEMARANG", fare: 500000, duration: "6j 00m" },
+      { origin: "BANDUNG", destination: "YOGYAKARTA", fare: 650000, duration: "8j 00m" },
+      { origin: "BANDUNG", destination: "SURABAYA", fare: 650000, duration: "10j 00m" },
+      { origin: "BANDUNG", destination: "DENPASAR BALI", fare: 750000, duration: "18j 00m" },
+      { origin: "BANDUNG", destination: "SERANG", fare: 450000, duration: "4j 00m" },
+      { origin: "BANDUNG", destination: "CILEGON", fare: 450000, duration: "4j 15m" },
+      { origin: "BANDUNG", destination: "KARAWANG", fare: 300000, duration: "2j 00m" },
+      { origin: "BANDUNG", destination: "BOGOR", fare: 300000, duration: "3j 00m" },
+      { origin: "BANDUNG", destination: "TANGERANG", fare: 300000, duration: "3j 30m" },
+
+      // DARI JAMBI
+      { origin: "JAMBI", destination: "BANDAR LAMPUNG", fare: 510000, duration: "9j 30m" },
+      { origin: "JAMBI", destination: "TANGERANG", fare: 800000, duration: "17j 00m" },
+      { origin: "JAMBI", destination: "BANDUNG", fare: 850000, duration: "19j 00m" },
+      { origin: "JAMBI", destination: "BOGOR", fare: 800000, duration: "18j 00m" },
+      { origin: "JAMBI", destination: "PEKANBARU", fare: 350000, duration: "7j 00m" },
+      { origin: "JAMBI", destination: "LUBUKLINGGAU", fare: 300000, duration: "6j 30m" },
+      { origin: "JAMBI", destination: "BENGKULU", fare: 400000, duration: "9j 00m" },
+      { origin: "JAMBI", destination: "BATURAJA", fare: 400000, duration: "8j 00m" },
+      { origin: "JAMBI", destination: "MUARA DUA", fare: 500000, duration: "9j 30m" },
+      { origin: "JAMBI", destination: "PRABUMULIH", fare: 400000, duration: "7j 30m" },
+
+      // DARI PEKANBARU
+      { origin: "PEKANBARU", destination: "JAMBI", fare: 350000, duration: "7j 00m" },
+      { origin: "PEKANBARU", destination: "BANDAR LAMPUNG", fare: 750000, duration: "16j 00m" },
+      { origin: "PEKANBARU", destination: "TANGERANG", fare: 1000000, duration: "22j 00m" },
+      { origin: "PEKANBARU", destination: "BANDUNG", fare: 1200000, duration: "24j 00m" },
+
+      // DARI KOTA-KOTA PULAU JAWA MENUJU TANGERANG
+      { origin: "DEPOK", destination: "TANGERANG", fare: 300000, duration: "2j 00m" },
+      { origin: "INDRAMAYU", destination: "TANGERANG", fare: 300000, duration: "4j 00m" },
+      { origin: "CIREBON", destination: "TANGERANG", fare: 300000, duration: "4j 30m" },
+      { origin: "SEMARANG", destination: "TANGERANG", fare: 400000, duration: "6j 00m" },
+      { origin: "YOGYAKARTA", destination: "TANGERANG", fare: 500000, duration: "8j 00m" },
+      { origin: "SURABAYA", destination: "TANGERANG", fare: 600000, duration: "10j 00m" },
+      { origin: "SERANG", destination: "TANGERANG", fare: 300000, duration: "1j 30m" },
+      { origin: "CILEGON", destination: "TANGERANG", fare: 350000, duration: "2j 00m" },
+      { origin: "KARAWANG", destination: "TANGERANG", fare: 300000, duration: "2j 00m" },
+      { origin: "CIKAMPEK", destination: "TANGERANG", fare: 300000, duration: "2j 15m" },
+
+      // DARI DENPASAR BALI
+      { origin: "DENPASAR BALI", destination: "MALANG", fare: 1500000, duration: "10j 00m" },
+      { origin: "DENPASAR BALI", destination: "SURABAYA", fare: 400000, duration: "9j 00m" },
+      { origin: "DENPASAR BALI", destination: "YOGYAKARTA", fare: 500000, duration: "14j 00m" },
+      { origin: "DENPASAR BALI", destination: "SEMARANG", fare: 550000, duration: "15j 00m" },
+      { origin: "DENPASAR BALI", destination: "BANDUNG", fare: 750000, duration: "18j 00m" },
+      { origin: "DENPASAR BALI", destination: "GARUT", fare: 800000, duration: "19j 00m" },
+      { origin: "DENPASAR BALI", destination: "DEPOK", fare: 800000, duration: "20j 00m" },
+      { origin: "DENPASAR BALI", destination: "BOGOR", fare: 800000, duration: "20j 30m" },
+      { origin: "DENPASAR BALI", destination: "KARAWANG", fare: 800000, duration: "19j 00m" },
+      { origin: "DENPASAR BALI", destination: "CIKAMPEK", fare: 800000, duration: "19j 15m" },
+      { origin: "DENPASAR BALI", destination: "TANGERANG", fare: 850000, duration: "21j 00m" },
+      { origin: "DENPASAR BALI", destination: "SERANG", fare: 950000, duration: "22j 00m" },
+      { origin: "DENPASAR BALI", destination: "CILEGON", fare: 1000000, duration: "22j 30m" },
+      { origin: "DENPASAR BALI", destination: "BANDAR LAMPUNG", fare: 1300000, duration: "24j 00m" },
+      { origin: "DENPASAR BALI", destination: "PALEMBANG", fare: 1500000, duration: "28j 00m" },
+      { origin: "DENPASAR BALI", destination: "JAMBI", fare: 1600000, duration: "32j 00m" },
+      { origin: "DENPASAR BALI", destination: "PEKANBARU", fare: 1900000, duration: "38j 00m" },
+      { origin: "DENPASAR BALI", destination: "MEDAN", fare: 2100000, duration: "48j 00m" },
+      { origin: "DENPASAR BALI", destination: "ACEH", fare: 2400000, duration: "54j 00m" }
+    ];
+
+    // Ekstrak daftar kota asal unik yang tersedia di tabel
+    const ORIGIN_CITIES = Array.from(new Set(ROUTE_FARES.map(r => r.origin))).sort();
+
+    
+    // Promosi Ber-3 Auto Slide
+    const PROMO_SLIDES = [
+      {
+        id: 1,
+        title: "PROMO SPESIAL PAKET BERTIGA (BER-3)",
+        subtitle: "Hemat hingga Rp 100.000 untuk perjalanan rombongan 3 orang ke semua rute!",
+        tag: "HEMAT BESAR",
+        imgSrc: "bkl.jpg",
+        waMessage: "Halo Admin Berkah Travel Wisata, saya ingin pesan PROMO PAKET BER-3 sekarang."
+      },
+      {
+        id: 2,
+        title: "PROMO CARTER DROP 1 MOBIL (ALL IN)",
+        subtitle: "Private trip nyaman keluarga / rekan kerja dengan Hiace Premio & Innova Reborn.",
+        tag: "EXCLUSIVE",
+        imgSrc: "premio.png",
+        waMessage: "Halo Admin Berkah Travel Wisata, saya ingin pesan Paket Carter Drop 1 Mobil."
+      },
+      {
+        id: 3,
+        title: "PAKET WISATA & ZIARAH ROMBONGAN",
+        subtitle: "Jadwal fleksibel, armada terawat, driver ramah dan berpengalaman.",
+        tag: "WISATA & BISNIS",
+        imgSrc: "Premio.png",
+        waMessage: "Halo Admin Berkah Travel Wisata, saya ingin konsultasi Paket Wisata Rombongan."
+      }
+    ];
+
+    // Ulasan Google Asli
+    const GOOGLE_REVIEWS = [
+      {
+        name: "Ahmad Fauzi",
+        time: "2 hari lalu",
+        rating: 5,
+        text: "Sangat puas naik Berkah Travel Wisata. Mobil Hiace Premio bersih, wangi, AC dingin banget dan supir bawa mobilnya halus lewat tol. Sampai tujuan tepat waktu!"
+      },
+      {
+        name: "Siti Rahmawati",
+        time: "1 minggu lalu",
+        rating: 5,
+        text: "Pelayanan admin fast respon banget, penjemputan door to door diantar sampai depan pintu rumah. Rekomendasi buat yang mau travel tanpa ribet."
+      },
+      {
+        name: "Dedi Supriyadi",
+        time: "2 minggu lalu",
+        rating: 5,
+        text: "Pesan paket ber-3 hemat banyak! Driver sopan, armada Innova Reborn nyaman kursinya empuk. Mantap Berkah Travel Wisata."
+      }
+    ];
+
+    function App() {
+      // Step Navigasi
+      const [currentStep, setCurrentStep] = useState(1);
+
+      // Tahap 1 State
+      const [isRoundTrip, setIsRoundTrip] = useState(false);
+      const [origin, setOrigin] = useState("PALEMBANG");
+      const [destination, setDestination] = useState("BANDUNG");
+      const [departDate, setDepartDate] = useState("2026-10-25");
+      const [returnDate, setReturnDate] = useState("2026-10-28");
+      const [passengersCount, setPassengersCount] = useState(1);
+
+      // Daftar Kota Tujuan yang tersedia berdasarkan Kota Asal terpilih
+      const availableDestinations = useMemo(() => {
+        const dests = ROUTE_FARES.filter(r => r.origin === origin).map(r => r.destination);
+        return Array.from(new Set(dests)).sort();
+      }, [origin]);
+
+      // Pastikan kota tujuan valid saat kota asal berubah
+      useEffect(() => {
+        if (!availableDestinations.includes(destination)) {
+          if (availableDestinations.length > 0) {
+            setDestination(availableDestinations[0]);
+          }
+        }
+      }, [origin, availableDestinations]);
+
+      // Ambil tarif resmi dari tabel berdasarkan origin & destination terpilih
+      const selectedRouteInfo = useMemo(() => {
+        const match = ROUTE_FARES.find(r => r.origin === origin && r.destination === destination);
+        if (match) return match;
+        // Fallback jika direct reverse match ada
+        const revMatch = ROUTE_FARES.find(r => r.origin === destination && r.destination === origin);
+        if (revMatch) return { origin, destination, fare: revMatch.fare, duration: revMatch.duration };
+        return { origin, destination, fare: 350000, duration: "12j 00m" };
+      }, [origin, destination]);
+
+      // Slider Promo
+      const [promoIndex, setPromoIndex] = useState(0);
+
+      // Tahap 2: Jadwal Terpilih & Dinamis Sesuai Tarif Tabel
+      const [selectedSchedule, setSelectedSchedule] = useState(null);
+
+      // Buat jadwal dinamis berdasarkan tarif resmi tabel yang dipilih
+      const dynamicSchedules = useMemo(() => {
+        const basePrice = selectedRouteInfo.fare;
+        const dur = selectedRouteInfo.duration || "13j 30m";
+        return [
+          {
+            id: 1,
+            operator: "Berkah Travel Wisata",
+            busType: "Toyota Hiace Premio Luxury (Executive)",
+            rating: "4.9/5",
+            departTime: "19:00",
+            departDateLabel: "Malam",
+            departLoc: "Pool Utama Berkah Travel",
+            arrivalTime: "08:40",
+            arrivalLoc: "Antar Alamat (Door to Door)",
+            duration: dur,
+            price: basePrice,
+            availableSeats: 6,
+            facilities: ["Full AC", "Captain Seat", "USB Charger", "Full Tol Trans", "Door to Door", "Snack & Air Mineral"]
+          },
+          {
+            id: 2,
+            operator: "Berkah Travel Wisata",
+            busType: "Innova Reborn Captain Seat (Reguler Malam)",
+            rating: "4.9/5",
+            departTime: "20:00",
+            departDateLabel: "Malam",
+            departLoc: "Pool Utama Berkah Travel",
+            arrivalTime: "09:30",
+            arrivalLoc: "Terminal / Pool / Alamat Tujuan",
+            duration: dur,
+            price: basePrice,
+            availableSeats: 4,
+            facilities: ["Full AC", "Reclining Seat", "Full Musik", "Full Tol Trans", "Door to Door"]
+          },
+          {
+            id: 3,
+            operator: "Berkah Travel Wisata",
+            busType: "Toyota Hiace Commuter (Pagi Executive)",
+            rating: "4.9/5",
+            departTime: "10:00",
+            departDateLabel: "Pagi/Siang",
+            departLoc: "Pool Utama Berkah Travel",
+            arrivalTime: "23:20",
+            arrivalLoc: "Pool / Antar Alamat",
+            duration: dur,
+            price: basePrice,
+            availableSeats: 8,
+            facilities: ["Full AC", "Charger HP", "Full Tol", "Bagasi Luas"]
+          },
+          {
+            id: 4,
+            operator: "Berkah Travel Wisata",
+            busType: "Innova Reborn Shuttle VIP (Sore)",
+            rating: "4.9/5",
+            departTime: "14:00",
+            departDateLabel: "Siang",
+            departLoc: "Pool Berkah Travel",
+            arrivalTime: "04:20",
+            arrivalLoc: "Alamat Tujuan Lengkap",
+            duration: dur,
+            price: basePrice,
+            availableSeats: 2,
+            facilities: ["Full AC", "Audio Entertainment", "Snack", "Via Tol Cepat"]
+          }
+        ];
+      }, [selectedRouteInfo]);
+
+      // Tahap 3: Login Google & Form Data
+      const [isLoggedInGoogle, setIsLoggedInGoogle] = useState(true);
+      const [contactData, setContactData] = useState({
+        title: "Tuan",
+        fullName: "Berkah Travel",
+        phone: "81219232214",
+        email: "berkahtravelwisataa@gmail.com"
+      });
+
+      // Data Penumpang dinamis sesuai passengersCount
+      const [passengersList, setPassengersList] = useState([
+        { id: 1, title: "Tuan", name: "Berkah Travel" }
+      ]);
+
+      // Biaya Asuransi Perjalanan Tambahan (Opsional)
+      const [includeInsurance, setIncludeInsurance] = useState(true);
+      const insuranceFee = 15200;
+
+      // Tahap 5: Loading State & Payment Selected
+      const [isLoadingPayment, setIsLoadingPayment] = useState(false);
+      const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("BCA");
+      const [bookingCode, setBookingCode] = useState("");
+      const [showTicketModal, setShowTicketModal] = useState(false);
+
+      // Otomatis update array penumpang saat jumlah orang diubah
+      useEffect(() => {
+        setPassengersList(prev => {
+          const newList = [];
+          for (let i = 0; i < passengersCount; i++) {
+            newList.push(prev[i] || { id: i + 1, title: "Tuan", name: "" });
+          }
+          return newList;
+        });
+      }, [passengersCount]);
+
+      // Carousel Promo Otomatis Bergerak ke Kanan setiap 4 detik
+      useEffect(() => {
+        const interval = setInterval(() => {
+          setPromoIndex((prev) => (prev + 1) % PROMO_SLIDES.length);
+        }, 4000);
+        return () => clearInterval(interval);
+      }, []);
+
+      // Hitung total harga
+      const baseFare = selectedSchedule ? selectedSchedule.price * passengersCount : 0;
+      const totalInsurance = includeInsurance ? insuranceFee * passengersCount : 0;
+      const grandTotal = baseFare + totalInsurance;
+
+      // Format Rupiah
+      const formatRupiah = (num) => {
+        return new Intl.NumberFormat('id-ID', {
+          style: 'currency',
+          currency: 'IDR',
+          maximumFractionDigits: 0
+        }).format(num);
+      };
+
+      // Handler Pencarian
+      const handleSearchTickets = (e) => {
+        e.preventDefault();
+        if (origin === destination) {
+          showNotification("Kota asal dan kota tujuan tidak boleh sama!", "warning");
+          return;
+        }
+        setCurrentStep(2);
+        window.scrollTo({ top: 380, behavior: 'smooth' });
+      };
+
+      // Handler Pilih Jadwal (Tahap 2 -> Tahap 3)
+      const handleSelectSchedule = (schedule) => {
+        setSelectedSchedule(schedule);
+        setCurrentStep(3);
+        window.scrollTo({ top: 120, behavior: 'smooth' });
+      };
+
+      // Handler Lanjut ke Konfirmasi (Tahap 3 -> Tahap 4)
+      const handleContinueToReview = (e) => {
+        e.preventDefault();
+        if (!contactData.fullName || !contactData.phone) {
+          showNotification("Mohon lengkapi Data Pemesan!", "warning");
+          return;
+        }
+        for (let i = 0; i < passengersList.length; i++) {
+          if (!passengersList[i].name) {
+            showNotification(`Mohon isi nama lengkap untuk Traveler ${i + 1}`, "warning");
+            return;
+          }
+        }
+        setCurrentStep(4);
+        window.scrollTo({ top: 120, behavior: 'smooth' });
+      };
+
+      // Handler Lanjut ke Pembayaran (Tahap 4 -> Animasi Loading -> Tahap 5)
+      const handleProceedToPayment = () => {
+        const randomId = "BTW-" + Math.floor(100000 + Math.random() * 900000);
+        setBookingCode(randomId);
+
+        setCurrentStep(5);
+        setIsLoadingPayment(true);
+        window.scrollTo({ top: 100, behavior: 'smooth' });
+
+        setTimeout(() => {
+          setIsLoadingPayment(false);
+        }, 2600);
+      };
+
+      // Kirim Konfirmasi ke WhatsApp Admin
+      const handleSendWhatsAppConfirmation = () => {
+        const textMessage = `*KONFIRMASI PEMESANAN BERKAH TRAVEL WISATA*
+----------------------------------------
+*Kode Booking:* ${bookingCode}
+*Rute:* ${origin} ➔ ${destination}
+*Tipe Perjalanan:* ${isRoundTrip ? 'Pulang Pergi (PP)' : 'Sekali Jalan'}
+*Tanggal Berangkat:* ${departDate} (${selectedSchedule?.departTime || '19:00'} WIB)
+${isRoundTrip ? `*Tanggal Pulang:* ${returnDate}\n` : ''}*Armada:* ${selectedSchedule?.busType || 'Executive Shuttle'}
+*Tarif / Orang:* ${formatRupiah(selectedSchedule?.price || 0)}
+*Jumlah Penumpang:* ${passengersCount} Orang
+
+*Data Pemesan:*
+- Nama: ${contactData.fullName}
+- No HP: +62${contactData.phone}
+- Email: ${contactData.email}
+
+*Daftar Penumpang:*
+${passengersList.map((p, idx) => `${idx + 1}. ${p.title} ${p.name}`).join('\n')}
+
+*Rincian Pembayaran:*
+- Tiket (${passengersCount}x): ${formatRupiah(baseFare)}
+- Asuransi: ${includeInsurance ? formatRupiah(totalInsurance) : 'Tidak'}
+*TOTAL BAYAR:* ${formatRupiah(grandTotal)}
+*Metode Bayar:* ${selectedPaymentMethod}
+
+Halo admin Berkah Travel Wisata, saya ingin konfirmasi tiket & pembayaran di atas sesuai tarif resmi. Mohon diproses, terima kasih!`;
+
+        const encoded = encodeURIComponent(textMessage);
+        window.open(`https://wa.me/${WA_NUMBER}?text=${encoded}`, '_blank');
+      };
+
+      // Simple Notification Box (Tanpa alert())
+      const [toast, setToast] = useState({ show: false, msg: "", type: "info" });
+      const showNotification = (msg, type = "info") => {
+        setToast({ show: true, msg, type });
+        setTimeout(() => setToast({ show: false, msg: "", type: "info" }), 3500);
+      };
+
+      return (
+        <div className="flex-1 flex flex-col">
+          {/* TOAST NOTIFIKASI */}
+          {toast.show && (
+            <div className={`fixed bottom-6 right-6 z-50 px-5 py-3 rounded-xl shadow-xl text-white font-medium flex items-center space-x-3 transition-all transform duration-300 ${
+              toast.type === 'warning' ? 'bg-amber-500' : 'bg-brand-600'
+            }`}>
+              <i className="fa-solid fa-circle-info"></i>
+              <span>{toast.msg}</span>
+            </div>
+          )}
+
+          {/* ================= HEADER / NAVBAR ================= */}
+          <header className="sticky top-0 z-40 bg-white border-b border-sky-100 shadow-sm">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+              
+              {/* Logo */}
+              <div className="flex items-center space-x-3">
+                <a href="#" onClick={() => setCurrentStep(1)} className="flex items-center space-x-3">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-sky-600 to-sky-400 flex items-center justify-center shadow-md shadow-sky-200 overflow-hidden border border-sky-300">
+                    <img 
+                      src="logo.png" 
+                      alt="Logo Berkah Travel Wisata" 
+                      className="w-full h-full object-cover"
+                      onError={(e) => { e.target.src = "logo.png"; }}
+                    />
+                  </div>
+                  <div>
+                    <span className="font-extrabold text-xl tracking-tight text-sky-800 flex items-center gap-1.5">
+                      Berkah Travel Wisata
+                      <span className="bg-sky-100 text-sky-700 text-xs px-2 py-0.5 rounded-full font-semibold border border-sky-200">Official</span>
+                    </span>
+                    <p className="text-xs text-slate-500 font-medium">Layanan Travel, Shuttle & Carter Pariwisata</p>
+                  </div>
+                </a>
+              </div>
+
+              {/* Rating Google & Quick WA */}
+              <div className="flex items-center space-x-3 sm:space-x-6">
+                <div className="hidden md:flex items-center bg-slate-50 hover:bg-sky-50 transition border border-slate-200 px-3.5 py-1.5 rounded-full">
+                  <img 
+                    src="logo.png" 
+                    alt="Google" 
+                    className="h-4 mr-2"
+                  />
+                  <div className="flex items-center text-xs">
+                    <span className="font-bold text-slate-700 mr-1">4.9</span>
+                    <div className="flex text-amber-400 text-xs mr-1.5">
+                      <i className="fa-solid fa-star"></i>
+                      <i className="fa-solid fa-star"></i>
+                      <i className="fa-solid fa-star"></i>
+                      <i className="fa-solid fa-star"></i>
+                      <i className="fa-solid fa-star"></i>
+                    </div>
+                    <span className="text-slate-500 font-medium">(250+ ulasan)</span>
+                  </div>
+                </div>
+
+                <a 
+                  href={`https://wa.me/${WA_NUMBER}?text=Halo%20Admin%20Berkah%20Travel%20Wisata,%20saya%20ingin%20tanya%20jadwal%20dan%20tiket`} 
+                  target="_blank" 
+                  rel="noreferrer"
+                  className="bg-emerald-500 hover:bg-emerald-600 text-white text-xs sm:text-sm font-semibold px-4 py-2 rounded-full shadow-sm flex items-center space-x-2 transition"
+                >
+                  <i className="fa-brands fa-whatsapp text-lg"></i>
+                  <span className="hidden sm:inline">0812-1923-2214</span>
+                </a>
+
+                {isLoggedInGoogle ? (
+                  <div className="flex items-center space-x-2 pl-2 border-l border-slate-200">
+                    <div className="w-8 h-8 rounded-full bg-sky-500 text-white flex items-center justify-center font-bold text-sm shadow">
+                      B
+                    </div>
+                    <span className="hidden lg:block text-xs font-semibold text-slate-700 truncate max-w-[120px]">
+                      Berkah Travel
+                    </span>
+                  </div>
+                ) : (
+                  <button 
+                    onClick={() => setIsLoggedInGoogle(true)}
+                    className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-3 py-1.5 rounded-lg border flex items-center gap-1.5"
+                  >
+                    <i className="fa-brands fa-google text-red-500"></i>
+                    <span>Masuk</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Stepper Wizard Mini */}
+            <div className="bg-sky-50/70 border-t border-sky-100 py-2.5 px-4">
+              <div className="max-w-4xl mx-auto flex items-center justify-between text-xs sm:text-sm font-semibold text-slate-500">
+                <div className={`flex items-center space-x-1.5 ${currentStep >= 1 ? 'text-sky-600 font-bold' : ''}`}>
+                  <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs ${currentStep >= 1 ? 'bg-sky-600 text-white' : 'bg-slate-200'}`}>1</span>
+                  <span>Cari Rute</span>
+                </div>
+                <div className="h-0.5 w-6 sm:w-12 bg-slate-200"></div>
+                <div className={`flex items-center space-x-1.5 ${currentStep >= 2 ? 'text-sky-600 font-bold' : ''}`}>
+                  <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs ${currentStep >= 2 ? 'bg-sky-600 text-white' : 'bg-slate-200'}`}>2</span>
+                  <span>Jadwal</span>
+                </div>
+                <div className="h-0.5 w-6 sm:w-12 bg-slate-200"></div>
+                <div className={`flex items-center space-x-1.5 ${currentStep >= 3 ? 'text-sky-600 font-bold' : ''}`}>
+                  <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs ${currentStep >= 3 ? 'bg-sky-600 text-white' : 'bg-slate-200'}`}>3</span>
+                  <span>Data Traveler</span>
+                </div>
+                <div className="h-0.5 w-6 sm:w-12 bg-slate-200"></div>
+                <div className={`flex items-center space-x-1.5 ${currentStep >= 4 ? 'text-sky-600 font-bold' : ''}`}>
+                  <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs ${currentStep >= 4 ? 'bg-sky-600 text-white' : 'bg-slate-200'}`}>4</span>
+                  <span>Review</span>
+                </div>
+                <div className="h-0.5 w-6 sm:w-12 bg-slate-200"></div>
+                <div className={`flex items-center space-x-1.5 ${currentStep >= 5 ? 'text-sky-600 font-bold' : ''}`}>
+                  <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs ${currentStep >= 5 ? 'bg-sky-600 text-white' : 'bg-slate-200'}`}>5</span>
+                  <span>Bayar & E-Tiket</span>
+                </div>
+              </div>
+            </div>
+          </header>
+
+          {/* MAIN CONTENT AREA */}
+          <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full flex-1">
+            
+            {/* Banner Promo Slider */}
+            {currentStep <= 2 && (
+              <section className="mb-8 overflow-hidden rounded-2xl relative shadow-lg bg-gradient-to-r from-sky-700 to-sky-900 border border-sky-600 text-white">
+                <div 
+                  className="flex transition-transform duration-700 ease-in-out"
+                  style={{ transform: `translateX(-${promoIndex * 100}%)` }}
+                >
+                  {PROMO_SLIDES.map((slide) => (
+                    <div key={slide.id} className="min-w-full flex flex-col md:flex-row items-center justify-between p-6 md:p-10 relative">
+                      <div className="z-10 max-w-xl mb-6 md:mb-0">
+                        <span className="bg-amber-400 text-sky-950 text-xs font-black uppercase px-3 py-1 rounded-full tracking-wider shadow">
+                          {slide.tag}
+                        </span>
+                        <h2 className="text-2xl sm:text-3xl font-extrabold mt-3 leading-tight tracking-tight">
+                          {slide.title}
+                        </h2>
+                        <p className="text-sky-100 text-sm sm:text-base mt-2 font-normal">
+                          {slide.subtitle}
+                        </p>
+                        <div className="mt-6 flex flex-wrap gap-3">
+                          <a 
+                            href={`https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(slide.waMessage)}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="bg-travelokaOrange hover:bg-orange-600 text-white font-bold px-6 py-3 rounded-xl shadow-lg transition transform hover:-translate-y-0.5 flex items-center space-x-2"
+                          >
+                            <i className="fa-brands fa-whatsapp text-lg"></i>
+                            <span>Pesan Sekarang via WA</span>
+                          </a>
+                          <button 
+                            onClick={() => {
+                              setCurrentStep(1);
+                              setPassengersCount(3);
+                              showNotification("Pencarian otomatis diatur untuk 3 Penumpang Paket Hemat!", "info");
+                            }}
+                            className="bg-white/20 hover:bg-white/30 backdrop-blur text-white font-semibold px-5 py-3 rounded-xl transition border border-white/30"
+                          >
+                            Cari Tiket Ber-3
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="w-full md:w-5/12 h-52 sm:h-64 rounded-xl overflow-hidden shadow-2xl border-2 border-white/20">
+                        <img 
+                          src={slide.imgSrc} 
+                          alt={slide.title}
+                          className="w-full h-full object-cover transition duration-500 hover:scale-105"
+                          onError={(e) => { e.target.src = "https://placehold.co/600x400/0284c7/ffffff?text=Promo+Berkah+Travel"; }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex space-x-2 z-20">
+                  {PROMO_SLIDES.map((_, idx) => (
+                    <button 
+                      key={idx}
+                      onClick={() => setPromoIndex(idx)}
+                      className={`h-2 rounded-full transition-all duration-300 ${promoIndex === idx ? 'w-8 bg-amber-400' : 'w-2 bg-white/50'}`}
+                    ></button>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* ================= TAHAP 1: FORMULIR PEMESANAN TIKET DENGAN TABEL TARIF RESMI ================= */}
+            {currentStep === 1 && (
+              <div className="bg-white rounded-2xl shadow-xl border border-sky-100 overflow-hidden mb-10 transition">
+                <div className="bg-gradient-to-r from-brand-600 to-sky-600 px-6 py-4 text-white flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <i className="fa-solid fa-van-shuttle text-2xl"></i>
+                    <div>
+                      <h3 className="font-bold text-lg">Cari Tiket Travel & Shuttle Resmi</h3>
+                      <p className="text-xs text-sky-100">Tarif resmi terstandarisasi, armada nyaman, door-to-door antar jemput</p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-4 bg-sky-700/60 p-1.5 rounded-xl border border-sky-400/30 text-xs sm:text-sm font-semibold">
+                    <label className={`cursor-pointer px-3 py-1.5 rounded-lg transition ${!isRoundTrip ? 'bg-white text-sky-700 shadow' : 'text-sky-100'}`}>
+                      <input 
+                        type="radio" 
+                        name="tripType" 
+                        className="hidden" 
+                        checked={!isRoundTrip} 
+                        onChange={() => setIsRoundTrip(false)} 
+                      />
+                      Sekali Jalan
+                    </label>
+                    <label className={`cursor-pointer px-3 py-1.5 rounded-lg transition ${isRoundTrip ? 'bg-white text-sky-700 shadow' : 'text-sky-100'}`}>
+                      <input 
+                        type="radio" 
+                        name="tripType" 
+                        className="hidden" 
+                        checked={isRoundTrip} 
+                        onChange={() => setIsRoundTrip(true)} 
+                      />
+                      Pulang - Pergi (PP)
+                    </label>
+                  </div>
+                </div>
+
+                <form onSubmit={handleSearchTickets} className="p-6 md:p-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+                    
+                    {/* Kota Asal */}
+                    <div className="relative">
+                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1.5 mb-1.5">
+                        <i className="fa-solid fa-location-dot text-sky-500"></i>
+                        Kota Asal
+                      </label>
+                      <div className="border border-slate-300 rounded-xl p-3 hover:border-sky-500 focus-within:border-sky-500 focus-within:ring-2 focus-within:ring-sky-100 transition bg-white flex items-center">
+                        <select 
+                          value={origin} 
+                          onChange={(e) => setOrigin(e.target.value)}
+                          className="w-full bg-transparent font-bold text-slate-800 text-sm focus:outline-none cursor-pointer"
+                        >
+                          {ORIGIN_CITIES.map(c => <option key={c} value={c}>{c}</option>)}
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Kota Tujuan Sesuai Tabel Harga */}
+                    <div className="relative">
+                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1.5 mb-1.5">
+                        <i className="fa-solid fa-map-pin text-travelokaOrange"></i>
+                        Kota Tujuan
+                      </label>
+                      <div className="border border-slate-300 rounded-xl p-3 hover:border-sky-500 focus-within:border-sky-500 focus-within:ring-2 focus-within:ring-sky-100 transition bg-white flex items-center">
+                        <select 
+                          value={destination} 
+                          onChange={(e) => setDestination(e.target.value)}
+                          className="w-full bg-transparent font-bold text-slate-800 text-sm focus:outline-none cursor-pointer"
+                        >
+                          {availableDestinations.map(c => <option key={c} value={c}>{c}</option>)}
+                        </select>
+                      </div>
+                    </div>
+
+                    {/* Tanggal Berangkat */}
+                    <div>
+                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1.5 mb-1.5">
+                        <i className="fa-regular fa-calendar-days text-sky-500"></i>
+                        Tanggal Berangkat
+                      </label>
+                      <div className="border border-slate-300 rounded-xl p-3 hover:border-sky-500 focus-within:border-sky-500 focus-within:ring-2 focus-within:ring-sky-100 transition bg-white">
+                        <input 
+                          type="date" 
+                          value={departDate} 
+                          onChange={(e) => setDepartDate(e.target.value)}
+                          className="w-full bg-transparent font-bold text-slate-800 text-sm focus:outline-none cursor-pointer"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    {/* Jumlah Penumpang / Tanggal Pulang */}
+                    {isRoundTrip ? (
+                      <div>
+                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1.5 mb-1.5">
+                          <i className="fa-regular fa-calendar-check text-sky-500"></i>
+                          Tanggal Pulang
+                        </label>
+                        <div className="border border-slate-300 rounded-xl p-3 hover:border-sky-500 focus-within:border-sky-500 focus-within:ring-2 focus-within:ring-sky-100 transition bg-white">
+                          <input 
+                            type="date" 
+                            value={returnDate} 
+                            onChange={(e) => setReturnDate(e.target.value)}
+                            className="w-full bg-transparent font-bold text-slate-800 text-sm focus:outline-none cursor-pointer"
+                            required
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <div>
+                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1.5 mb-1.5">
+                          <i className="fa-solid fa-users text-sky-500"></i>
+                          Jumlah Orang
+                        </label>
+                        <div className="border border-slate-300 rounded-xl p-3 hover:border-sky-500 focus-within:border-sky-500 focus-within:ring-2 focus-within:ring-sky-100 transition bg-white flex items-center">
+                          <select 
+                            value={passengersCount} 
+                            onChange={(e) => setPassengersCount(parseInt(e.target.value))}
+                            className="w-full bg-transparent font-bold text-slate-800 text-sm focus:outline-none cursor-pointer"
+                          >
+                            <option value={1}>1 Orang (Dewasa)</option>
+                            <option value={2}>2 Orang</option>
+                            <option value={3}>3 Orang (Paket Ber-3 Hemat)</option>
+                            <option value={4}>4 Orang</option>
+                            <option value={5}>5 Orang</option>
+                            <option value={6}>6 Orang (Carter 1 Mobil)</option>
+                          </select>
+                        </div>
+                      </div>
+                    )}
+
+                  </div>
+
+                  {/* Info Live Tarif Tabel yang Terdeteksi */}
+                  <div className="mt-5 p-3.5 bg-sky-50 rounded-xl border border-sky-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                    <div className="flex items-center space-x-2 text-xs text-sky-800">
+                      <i className="fa-solid fa-circle-check text-emerald-500 text-base"></i>
+                      <span>
+                        Tarif Resmi Tabel: <strong>{origin} ➔ {destination}</strong>
+                      </span>
+                    </div>
+                    <div className="text-sm font-extrabold text-travelokaOrange">
+                      {formatRupiah(selectedRouteInfo.fare)} <span className="text-xs font-normal text-slate-500">/orang</span>
+                    </div>
+                  </div>
+
+                  {/* Tambahan Baris jika PP untuk Jumlah Orang */}
+                  {isRoundTrip && (
+                    <div className="mt-4 max-w-xs">
+                      <label className="text-xs font-bold text-slate-500 uppercase tracking-wide flex items-center gap-1.5 mb-1.5">
+                        <i className="fa-solid fa-users text-sky-500"></i>
+                        Jumlah Orang
+                      </label>
+                      <div className="border border-slate-300 rounded-xl p-3 hover:border-sky-500 focus-within:border-sky-500 transition bg-white">
+                        <select 
+                          value={passengersCount} 
+                          onChange={(e) => setPassengersCount(parseInt(e.target.value))}
+                          className="w-full bg-transparent font-bold text-slate-800 text-sm focus:outline-none cursor-pointer"
+                        >
+                          <option value={1}>1 Orang</option>
+                          <option value={2}>2 Orang</option>
+                          <option value={3}>3 Orang (Paket Promo)</option>
+                          <option value={4}>4 Orang</option>
+                          <option value={5}>5 Orang</option>
+                        </select>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Tombol Cari Tiket */}
+                  <div className="mt-8 flex justify-end">
+                    <button 
+                      type="submit"
+                      className="w-full sm:w-auto px-10 py-4 bg-travelokaOrange hover:bg-orange-600 text-white font-extrabold text-base rounded-xl shadow-lg shadow-orange-200 transition transform hover:-translate-y-0.5 flex items-center justify-center space-x-3 cursor-pointer"
+                    >
+                      <i className="fa-solid fa-magnifying-glass"></i>
+                      <span>Cari Tiket Sekarang</span>
+                    </button>
+                  </div>
+                </form>
+              </div>
+            )}
+
+
+            
+            {/* ================= TAHAP 2: JADWAL KEBERANGKATAN DENGAN TARIF RESMI ================= */}
+            {currentStep === 2 && (
+              <div className="space-y-6">
+                {/* Header Summary Rute */}
+                <div className="bg-white p-4 sm:p-5 rounded-2xl border border-sky-100 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div>
+                    <div className="flex items-center space-x-2 text-sm text-slate-500 font-semibold mb-1">
+                      <span className="bg-sky-100 text-sky-800 px-2.5 py-0.5 rounded-full text-xs font-bold">Rute Terpilih</span>
+                      <span>{departDate}</span>
+                      <span>•</span>
+                      <span>{passengersCount} Kursi / Penumpang</span>
+                    </div>
+                    <h2 className="text-xl sm:text-2xl font-extrabold text-slate-800 flex items-center gap-2">
+                      <span>{origin}</span>
+                      <i className="fa-solid fa-arrow-right text-sky-500 text-sm"></i>
+                      <span>{destination}</span>
+                    </h2>
+                  </div>
+
+                  <button 
+                    onClick={() => setCurrentStep(1)} 
+                    className="self-start md:self-center text-xs sm:text-sm font-bold text-sky-600 hover:text-sky-700 hover:underline flex items-center gap-1.5"
+                  >
+                    <i className="fa-solid fa-sliders"></i>
+                    <span>Ubah Pencarian Rute</span>
+                  </button>
+                </div>
+
+                {/* List Card Jadwal Menggunakan Tarif dari Gambar */}
+                <div className="space-y-4">
+                  {dynamicSchedules.map((schedule) => (
+                    <div 
+                      key={schedule.id}
+                      className="bg-white rounded-2xl border border-slate-200 hover:border-sky-300 shadow-sm hover:shadow-md transition p-5 sm:p-6"
+                    >
+                      {/* Operator Info & Rating */}
+                      <div className="flex flex-wrap items-center justify-between gap-2 pb-4 border-b border-slate-100">
+                        <div>
+                          <h3 className="font-bold text-base sm:text-lg text-slate-900">
+                            {schedule.operator}
+                          </h3>
+                          <div className="flex items-center space-x-2 mt-0.5">
+                            <span className="text-xs text-slate-500">{schedule.busType}</span>
+                            <span className="bg-sky-50 text-sky-700 text-xs font-bold px-2 py-0.5 rounded border border-sky-200 flex items-center gap-1">
+                              <i className="fa-solid fa-star text-amber-400"></i>
+                              {schedule.rating}
+                            </span>
+                          </div>
+                        </div>
+
+                        <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
+                          Sisa {schedule.availableSeats} Kursi Tersedia
+                        </span>
+                      </div>
+
+                      {/* Detail Waktu, Durasi, Tarif dari Tabel Gambar */}
+                      <div className="pt-4 grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+                        
+                        {/* Waktu & Rute */}
+                        <div className="lg:col-span-7 flex items-center space-x-4 sm:space-x-8">
+                          <div className="min-w-[90px]">
+                            <div className="text-xl sm:text-2xl font-black text-slate-800">{schedule.departTime}</div>
+                            <div className="text-xs text-slate-500 font-semibold">{origin}</div>
+                            <div className="text-[11px] text-slate-400 mt-0.5">Pool / Antar Jemput</div>
+                          </div>
+
+                          <div className="flex-1 flex flex-col items-center">
+                            <span className="text-[11px] font-bold text-slate-500 mb-1">{schedule.duration}</span>
+                            <div className="w-full flex items-center">
+                              <div className="w-2.5 h-2.5 rounded-full border-2 border-sky-500 bg-white"></div>
+                              <div className="flex-1 border-t-2 border-dashed border-slate-300"></div>
+                              <i className="fa-solid fa-van-shuttle text-sky-500 text-xs mx-1"></i>
+                              <div className="flex-1 border-t-2 border-dashed border-slate-300"></div>
+                              <div className="w-2.5 h-2.5 rounded-full bg-sky-500"></div>
+                            </div>
+                            <span className="text-[10px] text-emerald-600 font-semibold mt-1">Full Tol Trans</span>
+                          </div>
+
+                          <div className="min-w-[90px] text-right">
+                            <div className="text-xl sm:text-2xl font-black text-slate-800 flex items-center justify-end gap-1">
+                              {schedule.arrivalTime} 
+                              <span className="text-[11px] text-sky-600 font-bold bg-sky-50 px-1 py-0.5 rounded">(+1 h)</span>
+                            </div>
+                            <div className="text-xs text-slate-500 font-semibold">{destination}</div>
+                            <div className="text-[11px] text-slate-400 mt-0.5">Sampai Alamat</div>
+                          </div>
+                        </div>
+
+                        {/* Fasilitas Icon Tags */}
+                        <div className="lg:col-span-2 flex flex-wrap gap-1.5 text-[11px] text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                          <span className="flex items-center gap-1 font-medium"><i className="fa-solid fa-snowflake text-sky-400"></i> AC</span>
+                          <span className="flex items-center gap-1 font-medium"><i className="fa-solid fa-chair text-sky-400"></i> Captain</span>
+                          <span className="flex items-center gap-1 font-medium"><i className="fa-solid fa-bolt text-sky-400"></i> USB</span>
+                          <span className="flex items-center gap-1 font-medium"><i className="fa-solid fa-road text-sky-400"></i> Tol</span>
+                          <span className="text-[10px] text-sky-600 font-bold">+Door to Door</span>
+                        </div>
+
+                        {/* Tarif dari Tabel & Tombol Pesan */}
+                        <div className="lg:col-span-3 flex lg:flex-col items-center lg:items-end justify-between border-t lg:border-t-0 pt-3 lg:pt-0">
+                          <div className="text-left lg:text-right">
+                            <div className="text-xl sm:text-2xl font-black text-travelokaOrange">
+                              {formatRupiah(schedule.price)}
+                              <span className="text-xs text-slate-400 font-normal ml-1">/pax</span>
+                            </div>
+                            <div className="text-[11px] text-slate-400">Tarif all-in termasuk BBM & Tol</div>
+                          </div>
+
+                          <button 
+                            onClick={() => handleSelectSchedule(schedule)}
+                            className="mt-2 w-auto lg:w-full px-6 py-2.5 bg-travelokaOrange hover:bg-orange-600 text-white font-bold text-sm rounded-xl shadow-md transition transform active:scale-95 flex items-center justify-center space-x-1.5"
+                          >
+                            <span>Pesan Sekarang</span>
+                            <i className="fa-solid fa-chevron-right text-xs"></i>
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 pt-3 border-t border-slate-100 flex items-center space-x-6 text-xs font-bold text-sky-600">
+                        <span className="hover:underline cursor-pointer">Fitur & Fasilitas</span>
+                        <span className="hover:underline cursor-pointer">Rute Penjemputan</span>
+                        <span className="hover:underline cursor-pointer">Syarat & Ketentuan Tiket</span>
+                        <span className="hover:underline cursor-pointer">Rating & Review Google</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* ================= TAHAP 3: DATA PEMESAN & DATA PENUMPANG (SEPERTI DI TRAVELOKA) ================= */}
+            {currentStep === 3 && selectedSchedule && (
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                
+                {/* Form Data Pemesan & Penumpang (Kolom Kiri) */}
+                <div className="lg:col-span-8 space-y-6">
+                  
+                  <div>
+                    <h2 className="text-2xl font-black text-slate-800">Pemesanan Anda</h2>
+                    <p className="text-sm text-slate-500">Isi data kontak pemesan dan rincian penumpang dengan teliti.</p>
+                  </div>
+
+                  {/* Card Login Google Seperti Gambar Traveloka */}
+                  <div className="bg-white rounded-2xl p-5 border border-sky-100 shadow-sm flex items-center justify-between">
+                    <div className="flex items-center space-x-3.5">
+                      <div className="w-12 h-12 rounded-full bg-sky-500 text-white flex items-center justify-center text-xl shadow">
+                        <i className="fa-solid fa-user"></i>
+                      </div>
+                      <div>
+                        <div className="font-bold text-slate-800 text-sm sm:text-base">
+                          {isLoggedInGoogle ? "Log-In sebagai Berkah Travel" : "Belum Masuk Akun Google"}
+                        </div>
+                        <div className="text-xs text-slate-400">
+                          {isLoggedInGoogle ? "berkahtravelwisataa@gmail.com (Google)" : "Masuk akun untuk kelola tiket lebih mudah"}
+                        </div>
+                      </div>
+                    </div>
+
+                    <button 
+                      type="button"
+                      onClick={() => setIsLoggedInGoogle(!isLoggedInGoogle)}
+                      className="text-xs font-bold px-3 py-1.5 rounded-lg border border-slate-300 text-slate-600 hover:bg-slate-50 transition"
+                    >
+                      {isLoggedInGoogle ? "Ganti Akun" : "Masuk Google"}
+                    </button>
+                  </div>
+
+                  {/* Form Data Pemesan */}
+                  <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm">
+                    <div className="flex items-center justify-between mb-4 border-b pb-3">
+                      <h3 className="font-extrabold text-base text-slate-800">Data Pemesan (untuk E-tiket/Voucher)</h3>
+                      <span className="text-xs font-bold text-sky-600 cursor-pointer">Simpan Data</span>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+                      {/* Titel */}
+                      <div className="md:col-span-3">
+                        <label className="text-xs font-bold text-slate-600 block mb-1">
+                          Titel <span className="text-red-500">*</span>
+                        </label>
+                        <select 
+                          value={contactData.title}
+                          onChange={(e) => setContactData({...contactData, title: e.target.value})}
+                          className="w-full border border-slate-300 rounded-xl p-3 text-sm font-semibold focus:outline-none focus:border-sky-500"
+                        >
+                          <option value="Tuan">Tuan</option>
+                          <option value="Nyonya">Nyonya</option>
+                          <option value="Nona">Nona</option>
+                        </select>
+                      </div>
+
+                      {/* Nama Lengkap */}
+                      <div className="md:col-span-9">
+                        <label className="text-xs font-bold text-slate-600 block mb-1">
+                          Nama Lengkap <span className="text-red-500">*</span>
+                        </label>
+                        <input 
+                          type="text" 
+                          value={contactData.fullName}
+                          onChange={(e) => setContactData({...contactData, fullName: e.target.value})}
+                          placeholder="Sesuai KTP/SIM tanpa tanda baca"
+                          className="w-full border border-slate-300 rounded-xl p-3 text-sm font-semibold focus:outline-none focus:border-sky-500"
+                          required
+                        />
+                        <span className="text-[11px] text-slate-400">Sesuai KTP/paspor/SIM (tanpa tanda baca atau gelar)</span>
+                      </div>
+
+                      {/* No Handphone WhatsApp */}
+                      <div className="md:col-span-6">
+                        <label className="text-xs font-bold text-slate-600 block mb-1">
+                          No. Handphone (WhatsApp) <span className="text-red-500">*</span>
+                        </label>
+                        <div className="flex">
+                          <span className="inline-flex items-center px-3 rounded-l-xl border border-r-0 border-slate-300 bg-slate-100 text-slate-600 text-xs font-bold">
+                            🇮🇩 +62
+                          </span>
+                          <input 
+                            type="tel" 
+                            value={contactData.phone}
+                            onChange={(e) => setContactData({...contactData, phone: e.target.value})}
+                            placeholder="81219232214"
+                            className="w-full border border-slate-300 rounded-r-xl p-3 text-sm font-semibold focus:outline-none focus:border-sky-500"
+                            required
+                          />
+                        </div>
+                        <span className="text-[11px] text-slate-400">E-tiket dan konfirmasi driver akan dikirim ke nomor ini</span>
+                      </div>
+
+                      {/* Email */}
+                      <div className="md:col-span-6">
+                        <label className="text-xs font-bold text-slate-600 block mb-1">
+                          Email <span className="text-red-500">*</span>
+                        </label>
+                        <input 
+                          type="email" 
+                          value={contactData.email}
+                          onChange={(e) => setContactData({...contactData, email: e.target.value})}
+                          placeholder="contoh: email@example.com"
+                          className="w-full border border-slate-300 rounded-xl p-3 text-sm font-semibold focus:outline-none focus:border-sky-500"
+                          required
+                        />
+                        <span className="text-[11px] text-slate-400">Contoh: berkahtravelwisataa@gmail.com</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Detail Traveler / Data Penumpang Sesuai Jumlah Kursi */}
+                  <div className="space-y-4">
+                    <h3 className="font-extrabold text-base text-slate-800">Detail Traveler ({passengersList.length} Orang)</h3>
+                    
+                    {passengersList.map((passenger, index) => (
+                      <div key={passenger.id} className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+                        <div className="flex items-center justify-between pb-3 border-b mb-3">
+                          <span className="font-bold text-sm text-sky-700">Dewasa {index + 1}</span>
+                          <span className="text-xs text-slate-400">Traveler {index + 1}</span>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+                          <div className="md:col-span-3">
+                            <label className="text-xs font-bold text-slate-600 block mb-1">Titel</label>
+                            <select 
+                              value={passenger.title}
+                              onChange={(e) => {
+                                const updated = [...passengersList];
+                                updated[index].title = e.target.value;
+                                setPassengersList(updated);
+                              }}
+                              className="w-full border border-slate-300 rounded-xl p-2.5 text-sm font-semibold focus:outline-none focus:border-sky-500"
+                            >
+                              <option value="Tuan">Tuan</option>
+                              <option value="Nyonya">Nyonya</option>
+                              <option value="Nona">Nona</option>
+                            </select>
+                          </div>
+
+                          <div className="md:col-span-9">
+                            <label className="text-xs font-bold text-slate-600 block mb-1">Nama Lengkap Penumpang</label>
+                            <input 
+                              type="text" 
+                              value={passenger.name}
+                              onChange={(e) => {
+                                const updated = [...passengersList];
+                                updated[index].name = e.target.value;
+                                setPassengersList(updated);
+                              }}
+                              placeholder="Nama lengkap sesuai identitas"
+                              className="w-full border border-slate-300 rounded-xl p-2.5 text-sm font-semibold focus:outline-none focus:border-sky-500"
+                              required
+                            />
+                            <p className="text-[11px] text-amber-600 mt-1 flex items-center gap-1">
+                              <i className="fa-solid fa-triangle-exclamation"></i>
+                              Nama harus sesuai dengan KTP / Paspor
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Tombol Lanjut ke Tahap 4 */}
+                  <div className="flex items-center justify-between pt-4">
+                    <button 
+                      type="button"
+                      onClick={() => setCurrentStep(2)}
+                      className="px-5 py-3 rounded-xl border border-slate-300 text-slate-600 font-bold hover:bg-slate-100 transition text-sm"
+                    >
+                      Kembali ke Jadwal
+                    </button>
+
+                    <button 
+                      type="button"
+                      onClick={handleContinueToReview}
+                      className="px-8 py-3.5 bg-travelokaOrange hover:bg-orange-600 text-white font-extrabold rounded-xl shadow-lg transition text-sm flex items-center space-x-2"
+                    >
+                      <span>Lanjut ke Review Pemesanan</span>
+                      <i className="fa-solid fa-arrow-right"></i>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Sidebar Ringkasan Tiket (Kolom Kanan Mirip Traveloka) */}
+                <div className="lg:col-span-4">
+                  <div className="bg-white rounded-2xl border border-sky-100 shadow-sm p-5 sticky top-28 space-y-4">
+                    <div className="flex items-center space-x-2 font-black text-slate-800 text-sm border-b pb-3">
+                      <i className="fa-solid fa-van-shuttle text-sky-500"></i>
+                      <span>{origin} ➔ {destination}</span>
+                    </div>
+
+                    <div>
+                      <span className="text-xs font-bold text-slate-400 block uppercase">Jadwal Keberangkatan</span>
+                      <div className="font-extrabold text-slate-800 text-sm mt-0.5">{departDate}</div>
+                      <div className="text-xs text-sky-700 font-semibold">{selectedSchedule.operator} ({selectedSchedule.busType})</div>
+                    </div>
+
+                    {/* Timeline Perjalanan */}
+                    <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-100 space-y-3 text-xs">
+                      <div className="flex items-start space-x-2.5">
+                        <div className="w-2.5 h-2.5 rounded-full border-2 border-sky-500 bg-white mt-1"></div>
+                        <div>
+                          <div className="font-extrabold text-slate-800">{selectedSchedule.departTime} WIB</div>
+                          <div className="text-slate-600">{origin} (Pool / Door to Door)</div>
+                        </div>
+                      </div>
+                      <div className="pl-4 text-[11px] text-slate-400 border-l border-dashed border-slate-300 ml-1 py-1">
+                        Perjalanan {selectedSchedule.duration} (Tol Trans)
+                      </div>
+                      <div className="flex items-start space-x-2.5">
+                        <div className="w-2.5 h-2.5 rounded-full bg-sky-500 mt-1"></div>
+                        <div>
+                          <div className="font-extrabold text-slate-800">{selectedSchedule.arrivalTime} WIB (+1 hari)</div>
+                          <div className="text-slate-600">{destination} (Alamat Tujuan Lengkap)</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Kebijakan Tiket */}
+                    <div className="text-xs space-y-2 pt-2 border-t text-slate-500">
+                      <div className="flex items-center gap-1.5 text-slate-600">
+                        <i className="fa-solid fa-clock-rotate-left text-sky-500"></i>
+                        <span>Reschedule dapat dikonfirmasi ke admin</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-slate-600">
+                        <i className="fa-solid fa-shield-halved text-emerald-500"></i>
+                        <span>Jaminan Berangkat Tepat Waktu</span>
+                      </div>
+                    </div>
+
+                    {/* Estimasi Harga Sidebar */}
+                    <div className="pt-3 border-t">
+                      <div className="flex justify-between items-center text-xs text-slate-500 mb-1">
+                        <span>Tarif x {passengersCount} Orang</span>
+                        <span className="font-bold text-slate-800">{formatRupiah(baseFare)}</span>
+                      </div>
+                      <div className="flex justify-between items-center font-black text-slate-800 text-base">
+                        <span>Total Sementara</span>
+                        <span className="text-travelokaOrange">{formatRupiah(baseFare)}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            )}
+
+            {/* ================= TAHAP 4: KONFIRMASI DATA PENUMPANG & RINCIAN HARGA ================= */}
+            {currentStep === 4 && selectedSchedule && (
+              <div className="max-w-4xl mx-auto space-y-6">
+                <div>
+                  <h2 className="text-2xl font-black text-slate-800">Review Pemesanan & Rincian Harga</h2>
+                  <p className="text-sm text-slate-500">Pastikan seluruh rincian perjalanan Anda sudah sesuai sebelum melanjutkan pembayaran.</p>
+                </div>
+
+                {/* Card Ringkasan Lengkap */}
+                <div className="bg-white rounded-2xl border border-sky-100 shadow-sm p-6 space-y-6">
+                  
+                  {/* Info Header */}
+                  <div className="flex flex-wrap items-center justify-between pb-4 border-b">
+                    <div>
+                      <span className="bg-sky-100 text-sky-800 text-xs font-bold px-3 py-1 rounded-full">
+                        {isRoundTrip ? 'Perjalanan Pulang - Pergi' : 'Perjalanan Sekali Jalan'}
+                      </span>
+                      <h3 className="text-xl font-black text-slate-800 mt-2">
+                        {origin} ➔ {destination}
+                      </h3>
+                      <p className="text-xs text-slate-500">{selectedSchedule.operator} • {selectedSchedule.busType}</p>
+                    </div>
+
+                    <div className="text-right mt-2 sm:mt-0">
+                      <span className="text-xs text-slate-400 block">Jadwal Keberangkatan</span>
+                      <span className="font-extrabold text-slate-800 text-base">{departDate} | {selectedSchedule.departTime} WIB</span>
+                    </div>
+                  </div>
+
+                  {/* Detail Penumpang Review */}
+                  <div>
+                    <h4 className="text-xs font-black text-slate-400 uppercase tracking-wider mb-2">Data Penumpang Terdaftar</h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {passengersList.map((p, idx) => (
+                        <div key={p.id} className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-sm flex items-center space-x-3">
+                          <span className="w-6 h-6 rounded-full bg-sky-500 text-white flex items-center justify-center text-xs font-bold">
+                            {idx + 1}
+                          </span>
+                          <div>
+                            <div className="font-bold text-slate-800">{p.title} {p.name || '-'}</div>
+                            <div className="text-[11px] text-slate-400">Kursi Terkonfirmasi</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Asuransi Perjalanan Checkbox */}
+                  <div className="bg-sky-50/70 p-4 rounded-xl border border-sky-200 flex items-start space-x-3">
+                    <input 
+                      type="checkbox" 
+                      id="insurance"
+                      checked={includeInsurance}
+                      onChange={(e) => setIncludeInsurance(e.target.checked)}
+                      className="mt-1 w-4 h-4 text-sky-600 rounded border-slate-300 focus:ring-sky-500 cursor-pointer"
+                    />
+                    <label htmlFor="insurance" className="cursor-pointer text-xs sm:text-sm">
+                      <span className="font-bold text-slate-800">Proteksi Perjalanan & Bagasi Aman (+Rp 15.200 /pax)</span>
+                      <p className="text-slate-500 text-xs mt-0.5">Kompensasi keterlambatan, perlindungan keselamatan, dan santunan kecelakaan perjalanan travel.</p>
+                    </label>
+                  </div>
+
+                  {/* Rincian Harga Seperti Gambar Traveloka */}
+                  <div className="border border-slate-200 rounded-2xl overflow-hidden">
+                    <div className="bg-slate-50 px-5 py-3 border-b flex justify-between items-center">
+                      <span className="font-extrabold text-sm text-slate-700">Rincian Harga</span>
+                      <span className="text-xs text-sky-600 font-bold">Tarif Transparan Tanpa Biaya Tersembunyi</span>
+                    </div>
+                    
+                    <div className="p-5 space-y-3 text-sm">
+                      <div className="flex justify-between items-center text-slate-600">
+                        <span>{selectedSchedule.operator} ({selectedSchedule.busType}) x {passengersCount}</span>
+                        <span className="font-semibold text-slate-800">{formatRupiah(baseFare)}</span>
+                      </div>
+
+                      {includeInsurance && (
+                        <div className="flex justify-between items-center text-slate-600">
+                          <span>+ Asuransi Perjalanan Travel ({passengersCount} pax)</span>
+                          <span className="font-semibold text-slate-800">{formatRupiah(totalInsurance)}</span>
+                        </div>
+                      )}
+
+                      <div className="border-t pt-3 flex justify-between items-center text-base sm:text-lg font-black text-slate-900">
+                        <span>Harga yang Anda Bayar</span>
+                        <span className="text-travelokaOrange text-xl sm:text-2xl">{formatRupiah(grandTotal)}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Tombol Lanjut ke Pembayaran */}
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-3">
+                    <button 
+                      type="button"
+                      onClick={() => setCurrentStep(3)}
+                      className="w-full sm:w-auto px-6 py-3 rounded-xl border border-slate-300 text-slate-600 font-bold hover:bg-slate-100 transition text-sm"
+                    >
+                      Ubah Data Penumpang
+                    </button>
+
+                    <button 
+                      type="button"
+                      onClick={handleProceedToPayment}
+                      className="w-full sm:w-auto px-10 py-4 bg-travelokaOrange hover:bg-orange-600 text-white font-black text-base rounded-xl shadow-xl shadow-orange-200 transition transform hover:-translate-y-0.5 flex items-center justify-center space-x-2"
+                    >
+                      <span>Lanjut ke Pembayaran</span>
+                      <i className="fa-solid fa-chevron-right"></i>
+                    </button>
+                  </div>
+
+                </div>
+              </div>
+            )}
+
+            {/* ================= TAHAP 5: ANIMASI LOADING TIKET -> METODE PEMBAYARAN & CETAK E-TIKET ================= */}
+            {currentStep === 5 && (
+              <div className="max-w-3xl mx-auto">
+                {isLoadingPayment ? (
+                  /* Loading Gambar Animasi Traveloka (Persis Gambar Pengguna) */
+                  <div className="min-h-[460px] flex flex-col items-center justify-center p-8 text-center bg-white rounded-3xl border border-sky-100 shadow-xl my-6">
+                    <div className="relative mb-6">
+                      {/* Animasi Tiket Melayang */}
+                      <div className="w-28 h-28 relative flex items-center justify-center animate-float-ticket">
+                        <div className="w-24 h-24 bg-gradient-to-tr from-sky-400 to-sky-500 rounded-2xl rotate-12 shadow-xl flex items-center justify-center border-2 border-white">
+                          <i className="fa-solid fa-ticket-simple text-white text-4xl"></i>
+                        </div>
+                        <div className="absolute -top-2 -right-2 w-10 h-10 bg-emerald-400 rounded-full flex items-center justify-center text-white shadow-md">
+                          <i className="fa-solid fa-van-shuttle text-xs"></i>
+                        </div>
+                      </div>
+                      {/* Bayangan di bawah */}
+                      <div className="w-20 h-3 bg-sky-200/50 rounded-full blur-[4px] mx-auto mt-2 animate-glow"></div>
+                    </div>
+
+                    {/* Progress Bar Kecil Hijau */}
+                    <div className="w-64 h-1.5 bg-slate-100 rounded-full overflow-hidden mb-5">
+                      <div className="h-full bg-emerald-500 rounded-full w-3/4 animate-pulse"></div>
+                    </div>
+
+                    <h3 className="text-xl font-extrabold text-slate-800">Mengonfirmasi kursimu...</h3>
+                    <p className="text-sm text-slate-500 mt-1 max-w-sm">
+                      Mencari kursi terbaik untuk perjalananmu dengan Berkah Travel Wisata.
+                    </p>
+                  </div>
+                ) : (
+                  /* Layar Metode Pembayaran yang Tersedia */
+                  <div className="bg-white rounded-3xl border border-sky-100 shadow-xl overflow-hidden space-y-6 p-6 sm:p-8">
+                    
+                    {/* Header Sukses Booking */}
+                    <div className="text-center pb-6 border-b">
+                      <div className="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto text-2xl mb-3 shadow-inner">
+                        <i className="fa-solid fa-check"></i>
+                      </div>
+                      <span className="text-xs font-bold text-sky-600 bg-sky-50 px-3 py-1 rounded-full">
+                        KODE BOOKING: {bookingCode}
+                      </span>
+                      <h2 className="text-2xl font-black text-slate-800 mt-2">Pilih Metode Pembayaran</h2>
+                      <p className="text-xs text-slate-500">Selesaikan pembayaran sebelum kursi dialihkan ke penumpang lain.</p>
+                      
+                      <div className="mt-4 p-3 bg-slate-50 rounded-xl inline-block border border-slate-200">
+                        <span className="text-xs text-slate-500 block">Total Tagihan:</span>
+                        <span className="text-2xl font-black text-travelokaOrange">{formatRupiah(grandTotal)}</span>
+                      </div>
+                    </div>
+
+                    {/* Pilihan Metode Pembayaran Resmi */}
+                    <div className="space-y-3.5">
+                      <h4 className="text-xs font-black text-slate-400 uppercase tracking-wider">Rekening Resmi Berkah Travel Wisata</h4>
+                      
+                      {/* 1. BANK BCA */}
+                      <label 
+                        onClick={() => setSelectedPaymentMethod("BCA")}
+                        className={`flex items-center justify-between p-4 rounded-2xl border cursor-pointer transition ${
+                          selectedPaymentMethod === "BCA" ? 'border-sky-500 bg-sky-50/60 ring-2 ring-sky-200' : 'border-slate-200 hover:bg-slate-50'
+                        }`}
+                      >
+                        <div className="flex items-center space-x-3.5">
+                          <div className="w-12 h-10 bg-blue-800 rounded-xl flex items-center justify-center text-white font-black text-xs shadow">
+                            BCA
+                          </div>
+                          <div>
+                            <div className="font-extrabold text-sm text-slate-800">Transfer Bank BCA</div>
+                            <div className="text-xs text-slate-600 font-mono font-bold tracking-wider">1140255943</div>
+                            <div className="text-[11px] text-slate-500">a.n. <strong className="text-slate-800">ROFIQOH</strong></div>
+                          </div>
+                        </div>
+                        <input 
+                          type="radio" 
+                          name="paymentMethod" 
+                          checked={selectedPaymentMethod === "BCA"} 
+                          onChange={() => setSelectedPaymentMethod("BCA")}
+                          className="w-4 h-4 text-sky-600" 
+                        />
+                      </label>
+
+                      {/* 2. DANA */}
+                      <label 
+                        onClick={() => setSelectedPaymentMethod("DANA")}
+                        className={`flex items-center justify-between p-4 rounded-2xl border cursor-pointer transition ${
+                          selectedPaymentMethod === "DANA" ? 'border-sky-500 bg-sky-50/60 ring-2 ring-sky-200' : 'border-slate-200 hover:bg-slate-50'
+                        }`}
+                      >
+                        <div className="flex items-center space-x-3.5">
+                          <div className="w-12 h-10 bg-sky-500 rounded-xl flex items-center justify-center text-white font-black text-xs shadow">
+                            DANA
+                          </div>
+                          <div>
+                            <div className="font-extrabold text-sm text-slate-800">E-Wallet DANA</div>
+                            <div className="text-xs text-slate-600 font-mono font-bold tracking-wider">08976705232</div>
+                            <div className="text-[11px] text-slate-500">a.n. <strong className="text-slate-800">RAFIQOH</strong></div>
+                          </div>
+                        </div>
+                        <input 
+                          type="radio" 
+                          name="paymentMethod" 
+                          checked={selectedPaymentMethod === "DANA"} 
+                          onChange={() => setSelectedPaymentMethod("DANA")}
+                          className="w-4 h-4 text-sky-600" 
+                        />
+                      </label>
+
+                      {/* 3. OVO */}
+                      <label 
+                        onClick={() => setSelectedPaymentMethod("OVO")}
+                        className={`flex items-center justify-between p-4 rounded-2xl border cursor-pointer transition ${
+                          selectedPaymentMethod === "OVO" ? 'border-sky-500 bg-sky-50/60 ring-2 ring-sky-200' : 'border-slate-200 hover:bg-slate-50'
+                        }`}
+                      >
+                        <div className="flex items-center space-x-3.5">
+                          <div className="w-12 h-10 bg-purple-700 rounded-xl flex items-center justify-center text-white font-black text-xs shadow">
+                            OVO
+                          </div>
+                          <div>
+                            <div className="font-extrabold text-sm text-slate-800">E-Wallet OVO</div>
+                            <div className="text-xs text-slate-600 font-mono font-bold tracking-wider">08976705232</div>
+                            <div className="text-[11px] text-slate-500">a.n. <strong className="text-slate-800">BERKAH TRAVEL WISATA</strong></div>
+                          </div>
+                        </div>
+                        <input 
+                          type="radio" 
+                          name="paymentMethod" 
+                          checked={selectedPaymentMethod === "OVO"} 
+                          onChange={() => setSelectedPaymentMethod("OVO")}
+                          className="w-4 h-4 text-sky-600" 
+                        />
+                      </label>
+
+                      {/* 4. CASH ON DRIVER */}
+                      <label 
+                        onClick={() => setSelectedPaymentMethod("CASH ON DRIVER")}
+                        className={`flex items-center justify-between p-4 rounded-2xl border cursor-pointer transition ${
+                          selectedPaymentMethod === "CASH ON DRIVER" ? 'border-sky-500 bg-sky-50/60 ring-2 ring-sky-200' : 'border-slate-200 hover:bg-slate-50'
+                        }`}
+                      >
+                        <div className="flex items-center space-x-3.5">
+                          <div className="w-12 h-10 bg-emerald-600 rounded-xl flex items-center justify-center text-white font-black text-xs shadow">
+                            COD
+                          </div>
+                          <div>
+                            <div className="font-extrabold text-sm text-slate-800">CASH ON DRIVER (Bayar di Tempat)</div>
+                            <div className="text-xs text-slate-500">Bayar tunai ke driver saat penjemputan di alamat Anda</div>
+                          </div>
+                        </div>
+                        <input 
+                          type="radio" 
+                          name="paymentMethod" 
+                          checked={selectedPaymentMethod === "CASH ON DRIVER"} 
+                          onChange={() => setSelectedPaymentMethod("CASH ON DRIVER")}
+                          className="w-4 h-4 text-sky-600" 
+                        />
+                      </label>
+                    </div>
+
+                    {/* Tombol Aksi: Cetak E-Ticket & Hubungkan ke WhatsApp Admin */}
+                    <div className="pt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <button 
+                        type="button"
+                        onClick={() => setShowTicketModal(true)}
+                        className="w-full py-4 bg-sky-600 hover:bg-sky-700 text-white font-bold text-sm rounded-xl shadow-md transition flex items-center justify-center space-x-2"
+                      >
+                        <i className="fa-solid fa-print"></i>
+                        <span>Cetak E-Ticket Resmi</span>
+                      </button>
+
+                      <button 
+                        type="button"
+                        onClick={handleSendWhatsAppConfirmation}
+                        className="w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-sm rounded-xl shadow-lg shadow-emerald-200 transition transform hover:-translate-y-0.5 flex items-center justify-center space-x-2"
+                      >
+                        <i className="fa-brands fa-whatsapp text-xl"></i>
+                        <span>Konfirmasi ke WhatsApp Admin</span>
+                      </button>
+                    </div>
+
+                    <div className="text-center text-xs text-slate-400">
+                      Butuh bantuan darurat? Hubungi customer care Berkah Travel Wisata di <span className="font-bold text-slate-700">wa.me/6281219232214</span>
+                    </div>
+
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ================= MODAL POPUP CETAK E-TIKET ================= */}
+            {showTicketModal && (
+              <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+                <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl relative border border-sky-100 max-h-[90vh] overflow-y-auto">
+                  
+                  {/* Close Modal Button */}
+                  <button 
+                    onClick={() => setShowTicketModal(false)}
+                    className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 text-xl w-8 h-8 rounded-full flex items-center justify-center bg-slate-100"
+                  >
+                    <i className="fa-solid fa-xmark"></i>
+                  </button>
+
+                  <div className="text-center border-b pb-4 mb-4">
+                    <span className="text-xs font-black tracking-widest text-sky-600 uppercase">E-VOUCHER TIKET TRAVELOKA x BERKAH TRAVEL</span>
+                    <h3 className="text-2xl font-black text-slate-800 mt-1">E-TICKET RESMI</h3>
+                    <p className="text-xs text-slate-500 font-mono">BOOKING ID: {bookingCode}</p>
+                  </div>
+
+                  <div className="space-y-4 text-xs sm:text-sm">
+                    <div className="bg-sky-50 p-4 rounded-2xl flex justify-between items-center border border-sky-100">
+                      <div>
+                        <span className="text-[10px] text-slate-400 block font-bold">OPERATOR RESMI</span>
+                        <span className="font-extrabold text-slate-800">Berkah Travel Wisata</span>
+                        <div className="text-[11px] text-sky-600 font-semibold">{selectedSchedule?.busType}</div>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-[10px] text-slate-400 block font-bold">STATUS TIKET</span>
+                        <span className="text-emerald-700 bg-emerald-100 text-xs font-bold px-2.5 py-0.5 rounded-full">TERKONFIRMASI</span>
+                      </div>
+                    </div>
+
+                    <div className="border border-slate-200 rounded-2xl p-4 space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-slate-500">Rute:</span>
+                        <span className="font-bold text-slate-800">{origin} ➔ {destination}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-500">Waktu Berangkat:</span>
+                        <span className="font-bold text-slate-800">{departDate} ({selectedSchedule?.departTime} WIB)</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-500">Kontak Pemesan:</span>
+                        <span className="font-bold text-slate-800">{contactData.fullName} (+62{contactData.phone})</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-500">Metode Pembayaran:</span>
+                        <span className="font-bold text-sky-600">{selectedPaymentMethod}</span>
+                      </div>
+                      <div className="flex justify-between border-t pt-2">
+                        <span className="text-slate-700 font-bold">Total Pembayaran:</span>
+                        <span className="font-black text-travelokaOrange text-base">{formatRupiah(grandTotal)}</span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <span className="text-xs font-bold text-slate-500 block mb-1">Daftar Traveler:</span>
+                      <div className="bg-slate-50 rounded-xl p-3 space-y-1">
+                        {passengersList.map((p, i) => (
+                          <div key={p.id} className="text-xs text-slate-700 flex justify-between font-medium">
+                            <span>{i + 1}. {p.title} {p.name || '-'}</span>
+                            <span className="text-emerald-600 font-semibold">Seat #{i + 1}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="text-center pt-2">
+                      <p className="text-[11px] text-slate-400">
+                        Harap tunjukkan e-ticket ini kepada pengemudi / agen Berkah Travel saat penjemputan.
+                      </p>
+                    </div>
+
+                    <div className="flex gap-3 pt-2">
+                      <button 
+                        onClick={() => window.print()}
+                        className="flex-1 py-3 bg-sky-600 hover:bg-sky-700 text-white font-bold rounded-xl text-xs transition"
+                      >
+                        <i className="fa-solid fa-file-pdf mr-1"></i> Print / Simpan PDF
+                      </button>
+                      <button 
+                        onClick={() => setShowTicketModal(false)}
+                        className="py-3 px-5 border border-slate-300 text-slate-600 font-bold rounded-xl text-xs hover:bg-slate-50"
+                      >
+                        Tutup
+                      </button>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            )}
+
+            {/* ================= GALERI ARMADA (DENGAN KODINGAN SRC AGAR BISA DIEDIT SENDIRI) ================= */}
+            <section className="mt-16 mb-12">
+              <div className="flex flex-col md:flex-row md:items-end justify-between mb-8">
+                <div>
+                  <span className="text-xs font-black tracking-wider text-sky-600 uppercase">Armada Nyaman & Terawat</span>
+                  <h3 className="text-2xl font-black text-slate-900 mt-1">Pilihan Unit Berkah Travel Wisata</h3>
+                </div>
+                <p className="text-xs sm:text-sm text-slate-500 max-w-md mt-2 md:mt-0">
+                  Seluruh unit rutin diservis, dilengkapi AC dingin, reclining seat, charger HP, dan dikemudikan oleh driver profesional.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                
+                {/* Armada 1: Toyota Hiace Premio */}
+                <div className="bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm hover:shadow-lg transition">
+                  <div className="h-52 overflow-hidden bg-slate-100">
+                    {/* EDIT SRC GAMBAR ARMADA DI BAWAH INI */}
+                    <img 
+                      src="premio.png" 
+                      alt="Toyota Hiace Premio Berkah Travel" 
+                      className="w-full h-full object-cover transition duration-300 hover:scale-105"
+                      onError={(e) => { e.target.src = "premio.png"; }}
+                    />
+                  </div>
+                  <div className="p-5">
+                    <span className="bg-sky-100 text-sky-800 text-[11px] font-bold px-2.5 py-0.5 rounded-full">Kapasitas 8-10 Kursi</span>
+                    <h4 className="font-extrabold text-lg text-slate-900 mt-2">Toyota Hiace Premio Luxury</h4>
+                    <p className="text-xs text-slate-500 mt-1">Leg room ekstra lega, suspensi empuk, captain seat, audio full entertainment.</p>
+                  </div>
+                </div>
+
+                {/* Armada 2: Toyota Innova Reborn */}
+                <div className="bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm hover:shadow-lg transition">
+                  <div className="h-52 overflow-hidden bg-slate-100">
+                    {/* EDIT SRC GAMBAR ARMADA DI BAWAH INI */}
+                    <img 
+                      src="reborn.png" 
+                      alt="Toyota Innova Reborn Berkah Travel" 
+                      className="w-full h-full object-cover transition duration-300 hover:scale-105"
+                      onError={(e) => { e.target.src = "reborn.png"; }}
+                    />
+                  </div>
+                  <div className="p-5">
+                    <span className="bg-emerald-100 text-emerald-800 text-[11px] font-bold px-2.5 py-0.5 rounded-full">Kapasitas 5-6 Kursi</span>
+                    <h4 className="font-extrabold text-lg text-slate-900 mt-2">Toyota Innova Reborn Shuttle</h4>
+                    <p className="text-xs text-slate-500 mt-1">Sangat cocok untuk perjalanan cepat tol trans, antar jemput privat dan keluarga.</p>
+                  </div>
+                </div>
+
+                {/* Armada 3: Daihatsu Sigra / Avanza Hemat */}
+                <div className="bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm hover:shadow-lg transition">
+                  <div className="h-52 overflow-hidden bg-slate-100">
+                    {/* EDIT SRC GAMBAR ARMADA DI BAWAH INI */}
+                    <img 
+                      src="sigra.jpg" 
+                      alt="Armada Hemat Berkah Travel" 
+                      className="w-full h-full object-cover transition duration-300 hover:scale-105"
+                      onError={(e) => { e.target.src="sigra.jpg"; }}
+                    />
+                  </div>
+                  <div className="p-5">
+                    <span className="bg-amber-100 text-amber-800 text-[11px] font-bold px-2.5 py-0.5 rounded-full">Kapasitas 4-5 Kursi</span>
+                    <h4 className="font-extrabold text-lg text-slate-900 mt-2">Shuttle Reguler & Drop Off</h4>
+                    <p className="text-xs text-slate-500 mt-1">Pilihan hemat untuk perjalanan antarkota dan pengiriman titipan paket kilat.</p>
+                  </div>
+                </div>
+
+              </div>
+            </section>
+
+            {/* ================= ULASAN GOOGLE BERKAH TRAVEL WISATA ================= */}
+            <section className="mb-14 bg-white rounded-3xl p-6 sm:p-10 border border-sky-100 shadow-sm">
+              <div className="text-center max-w-xl mx-auto mb-10">
+                <div className="flex items-center justify-center space-x-2 mb-2">
+                  <img 
+                    src="logo.png" 
+                    alt="Google Reviews" 
+                    className="h-6"
+                  />
+                  <span className="font-extrabold text-slate-700 text-base">Ulasan Penumpang</span>
+                </div>
+                <h3 className="text-2xl sm:text-3xl font-black text-slate-900">
+                  Rating 5 dari 5 di Google Maps
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-500 mt-2">
+                  Dengarkan apa kata para penumpang setia Berkah Travel Wisata yang telah merasakan kenyamanan perjalanan bersama kami.
+                </p>
+              </div>
+
+
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {GOOGLE_REVIEWS.map((rev, index) => (
+                  <div key={index} className="bg-slate-50 rounded-2xl p-6 border border-slate-200/80 flex flex-col justify-between hover:bg-sky-50/50 transition">
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 rounded-full bg-sky-600 text-white font-bold flex items-center justify-center text-sm shadow">
+                            {rev.name[0]}
+                          </div>
+                          <div>
+                            <div className="font-extrabold text-sm text-slate-900">{rev.name}</div>
+                            <div className="text-[11px] text-slate-400">{rev.time}</div>
+                          </div>
+                        </div>
+                        <i className="fa-brands fa-google text-slate-400"></i>
+                      </div>
+
+                      <div className="flex text-amber-400 text-xs mb-3">
+                        {[...Array(rev.rating)].map((_, i) => (
+                          <i key={i} className="fa-solid fa-star"></i>
+                        ))}
+                      </div>
+
+                      <p className="text-xs text-slate-600 leading-relaxed italic">
+                        "{rev.text}"
+                      </p>
+                    </div>
+
+                    <div className="mt-4 pt-3 border-t border-slate-200/60 flex items-center text-[11px] text-emerald-600 font-bold">
+                      <i className="fa-solid fa-badge-check mr-1.5"></i>
+                      Penumpang Terverifikasi
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+          </main>
+
+
+          
+          {/* ================= FOOTER ================= */}
+          <footer className="bg-slate-900 text-slate-300 pt-12 pb-8 border-t border-slate-800">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-8 pb-8 border-b border-slate-800 text-xs">
+                
+                {/* Kolom 1: Profil */}
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-lg font-black text-white">Berkah Travel Wisata</span>
+                  </div>
+                  <p className="text-slate-400 leading-relaxed">
+                    Penyedia jasa transportasi travel antar kota, carter drop bandara, pariwisata, dan pengiriman paket kilat dengan armada terlengkap dan terawat.
+                  </p>
+                  <div className="text-amber-400 font-bold flex items-center gap-1.5">
+                    <i className="fa-solid fa-star"></i>
+                    <span>4.9 / 5.0 Google Official Rating</span>
+                  </div>
+                </div>
+
+                {/* Kolom 2: Rute Populer */}
+                <div className="space-y-2">
+                  <h4 className="font-bold text-white text-sm">Rute Terfavorit</h4>
+                  <ul className="space-y-1.5 text-slate-400">
+                    <li>Palembang ➔ Bandung (PP)</li>
+                    <li>Palembang ➔ Lampung / Bakauheni</li>
+                    <li>Palembang ➔ Jakarta / Bogor / Depok</li>
+                    <li>Palembang ➔ Lahat & Muara Enim</li>
+                    <li>Palembang ➔ Baturaja & Martapura</li>
+                  </ul>
+                </div>
+
+                {/* Kolom 3: Layanan Kami */}
+                <div className="space-y-2">
+                  <h4 className="font-bold text-white text-sm">Layanan Perjalanan</h4>
+                  <ul className="space-y-1.5 text-slate-400">
+                    <li>Travel Eksekutif Door to Door</li>
+                    <li>Carter Drop Off 1 Mobil</li>
+                    <li>Paket Promo Ber-3 Hemat</li>
+                    <li>Sewa Hiace & Bus Pariwisata</li>
+                    <li>Kirim Dokumen & Paket 1 Hari Sampai</li>
+                  </ul>
+                </div>
+
+                {/* Kolom 4: Hubungi Kami */}
+                <div className="space-y-2">
+                  <h4 className="font-bold text-white text-sm">Kontak & Reservasi</h4>
+                  <p className="text-slate-400">Layanan customer support 24 jam nonstop via WhatsApp:</p>
+                  <a 
+                    href={`https://wa.me/${WA_NUMBER}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center space-x-2 text-emerald-400 hover:text-emerald-300 font-bold text-sm"
+                  >
+                    <i className="fa-brands fa-whatsapp text-lg"></i>
+                    <span>+62 812-1923-2214</span>
+                  </a>
+                  <p className="text-[11px] text-slate-500 mt-2">
+                    Email: berkahtravelwisataa@gmail.com
+                  </p>
+                </div>
+
+              </div>
+
+              
+              <div className="pt-6 flex flex-col sm:flex-row items-center justify-between text-[11px] text-slate-500 gap-3">
+                <p>© 2026 CV Berkah Travel Wisata. All Rights Reserved.</p>
+                <div className="flex space-x-4">
+                  <span className="hover:text-slate-400 cursor-pointer">Syarat & Ketentuan</span>
+                  <span>•</span>
+                  <span className="hover:text-slate-400 cursor-pointer">Kebijakan Privasi</span>
+                  <span>•</span>
+                  <span className="hover:text-slate-400 cursor-pointer">Panduan Pembayaran</span>
+                </div>
+              </div>
+            </div>
+          </footer>
+
+        </div>
+      );
+    }
+
+    // Render React Root
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
+
+
